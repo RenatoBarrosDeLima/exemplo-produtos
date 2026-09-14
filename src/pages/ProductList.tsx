@@ -62,7 +62,6 @@ export function ProductList({ onNew, onEdit, onView }: Props) {
 
         {!loading && products.length === 0 && !error && (
           <div style={{ textAlign: 'center', padding: '100px 0' }}>
-            <div style={{ width: 64, height: 64, background: '#eef2ff', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 28 }}>📦</div>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 8px' }}>Nenhuma página criada</h2>
             <p style={{ fontSize: 14, color: '#64748b', margin: '0 0 28px' }}>Crie sua primeira página de produto com editor visual</p>
             <button onClick={onNew} style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>

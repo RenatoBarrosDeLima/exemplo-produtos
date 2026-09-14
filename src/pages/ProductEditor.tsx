@@ -17,12 +17,11 @@ function slugify(str: string) {
 
 const BLANK: Product = { name: 'Novo Produto', slug: 'novo-produto', sections: [] };
 
-const SECTION_TYPES: Array<{ type: SectionType; icon: string; desc: string }> = [
-  { type: 'text',    icon: '📝', desc: 'Bloco de texto livre' },
-  { type: 'gallery', icon: '🖼️', desc: 'Galeria de imagens' },
+const SECTION_TYPES: Array<{ type: SectionType; desc: string }> = [
+  { type: 'text',    desc: 'Bloco de texto livre' },
+  { type: 'gallery', desc: 'Galeria de imagens' },
 ];
 
-/* ── Helpers ── */
 const inp: React.CSSProperties = {
   width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0',
   borderRadius: 6, fontSize: 13, outline: 'none', background: '#fff', color: '#1e293b',
@@ -58,7 +57,6 @@ function AddSectionMenu({ onAdd }: { onAdd: (t: SectionType) => void }) {
               onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
               onMouseLeave={e => (e.currentTarget.style.background = 'none')}
             >
-              <span style={{ fontSize: 20 }}>{s.icon}</span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{SECTION_LABELS[s.type]}</div>
                 <div style={{ fontSize: 11, color: '#94a3b8' }}>{s.desc}</div>
@@ -71,7 +69,6 @@ function AddSectionMenu({ onAdd }: { onAdd: (t: SectionType) => void }) {
   );
 }
 
-/* ── Editor ── */
 export function ProductEditor({ initial, onBack, onSaved }: Props) {
   const [product, setProduct] = useState<Product>(initial ?? BLANK);
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -212,7 +209,6 @@ export function ProductEditor({ initial, onBack, onSaved }: Props) {
                         borderRadius: activeSection === s.id ? '8px 8px 0 0' : 8,
                       }}
                     >
-                      <span style={{ fontSize: 13 }}>{SECTION_TYPES.find(t => t.type === s.type)?.icon ?? '📄'}</span>
                       <span style={{ fontSize: 13, fontWeight: 600, flex: 1, color: activeSection === s.id ? '#4338ca' : '#334155' }}>
                         {SECTION_LABELS[s.type as SectionType]}
                       </span>
