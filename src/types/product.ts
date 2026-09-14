@@ -35,8 +35,8 @@ export interface Product {
 }
 
 export const SECTION_LABELS: Record<SectionType, string> = {
-  text: '📝 Texto',
-  gallery: '🖼️ Galeria',
+  text: 'Texto',
+  gallery: 'Galeria',
 };
 
 export function createDefaultSection(type: SectionType): PageSection {

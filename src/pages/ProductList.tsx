@@ -88,7 +88,6 @@ export function ProductList({ onNew, onEdit, onView }: Props) {
                   style={{ padding: '18px 20px 14px', cursor: 'pointer' }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                    <div style={{ width: 36, height: 36, background: '#eef2ff', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>📦</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</h3>
                       <div style={{ fontSize: 12, color: '#94a3b8' }}>/{p.slug}</div>

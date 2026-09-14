@@ -38,17 +38,10 @@ export function ProductPage({ product, onBack, onEdit }: Props) {
         <div style={{ flex: 1 }} />
 
         <button
-          onClick={handleCopyLink}
-          style={{ padding: '6px 14px', background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', fontSize: 13, color: '#64748b' }}
-        >
-          🔗 Copiar link
-        </button>
-
-        <button
           onClick={onEdit}
           style={{ padding: '6px 18px', background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
         >
-          ✏️ Editar
+          Editar
         </button>
       </div>
 
