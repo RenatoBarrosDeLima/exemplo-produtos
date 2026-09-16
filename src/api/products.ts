@@ -20,6 +20,15 @@ export async function fetchProductBySlug(slug: string): Promise<Product> {
   return res.json();
 }
 
+async function extractError(res: Response, fallback: string): Promise<string> {
+  try {
+    const body = await res.json();
+    return body?.message ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export async function createProduct(
   product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<Product> {
@@ -28,7 +37,7 @@ export async function createProduct(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(product),
   });
-  if (!res.ok) throw new Error(`Erro ao criar produto: ${await res.text()}`);
+  if (!res.ok) throw new Error(await extractError(res, 'Erro ao criar produto'));
   return res.json();
 }
 
@@ -41,7 +50,7 @@ export async function updateProduct(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(product),
   });
-  if (!res.ok) throw new Error(`Erro ao atualizar produto: ${await res.text()}`);
+  if (!res.ok) throw new Error(await extractError(res, 'Erro ao atualizar produto'));
   return res.json();
 }
 
