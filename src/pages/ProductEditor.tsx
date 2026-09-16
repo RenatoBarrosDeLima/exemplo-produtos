@@ -1,15 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import type { Product, PageSection, SectionType } from '../types/product';
 import { SECTION_LABELS, createDefaultSection } from '../types/product';
 import { generatePageHtml } from '../utils/pageGenerator';
-import { createProduct, updateProduct } from '../api/products';
+import { fetchProduct, createProduct, updateProduct } from '../api/products';
 import { SectionEditor } from '../components/editor/SectionEditor';
-
-interface Props {
-  initial?: Product;
-  onBack: () => void;
-  onSaved: (p: Product) => void;
-}
 
 function slugify(str: string) {
   return str.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -69,13 +64,26 @@ function AddSectionMenu({ onAdd }: { onAdd: (t: SectionType) => void }) {
   );
 }
 
-export function ProductEditor({ initial, onBack, onSaved }: Props) {
-  const [product, setProduct] = useState<Product>(initial ?? BLANK);
+export function ProductEditor() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  const [product, setProduct] = useState<Product>(BLANK);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(!!id);
   const [error, setError] = useState('');
   const [savedOk, setSavedOk] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    fetchProduct(Number(id))
+      .then(setProduct)
+      .catch(() => setError('Produto não encontrado'))
+      .finally(() => setLoading(false));
+  }, [id]);
 
   const html = generatePageHtml(product);
 
@@ -116,9 +124,12 @@ export function ProductEditor({ initial, onBack, onSaved }: Props) {
       const payload = { name: product.name, slug: product.slug, sections: product.sections };
       const result = product.id ? await updateProduct(product.id, payload) : await createProduct(payload);
       setProduct(result);
-      onSaved(result);
       setSavedOk(true);
       setTimeout(() => setSavedOk(false), 3000);
+      // Se era novo produto, redireciona para a URL de edição com o ID real
+      if (!id && result.id) {
+        navigate(`/products/${result.id}/edit`, { replace: true });
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erro ao salvar');
     } finally {
@@ -126,12 +137,20 @@ export function ProductEditor({ initial, onBack, onSaved }: Props) {
     }
   };
 
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', color: '#94a3b8' }}>
+        Carregando produto…
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', background: '#f8fafc' }}>
 
       {/* TOP BAR */}
       <div style={{ height: 52, display: 'flex', alignItems: 'center', gap: 12, padding: '0 16px', background: '#fff', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
-        <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', fontSize: 13, color: '#64748b' }}>
+        <button onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', fontSize: 13, color: '#64748b' }}>
           ← Voltar
         </button>
         <div style={{ width: 1, height: 20, background: '#e2e8f0' }} />

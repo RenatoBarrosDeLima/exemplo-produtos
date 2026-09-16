@@ -1,16 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Product } from '../types/product';
 import { fetchProducts, deleteProduct } from '../api/products';
 import { SECTION_LABELS } from '../types/product';
 import type { SectionType } from '../types/product';
 
-interface Props {
-  onNew: () => void;
-  onEdit: (p: Product) => void;
-  onView: (p: Product) => void;
-}
-
-export function ProductList({ onNew, onEdit, onView }: Props) {
+export function ProductList() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -40,7 +36,7 @@ export function ProductList({ onNew, onEdit, onView }: Props) {
           </div>
           <div style={{ flex: 1 }} />
           <button
-            onClick={onNew}
+            onClick={() => navigate('/products/new')}
             style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
           >
             + Nova página
@@ -64,7 +60,7 @@ export function ProductList({ onNew, onEdit, onView }: Props) {
           <div style={{ textAlign: 'center', padding: '100px 0' }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 8px' }}>Nenhuma página criada</h2>
             <p style={{ fontSize: 14, color: '#64748b', margin: '0 0 28px' }}>Crie sua primeira página de produto com editor visual</p>
-            <button onClick={onNew} style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
+            <button onClick={() => navigate('/products/new')} style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
               Criar primeira página
             </button>
           </div>
@@ -84,7 +80,7 @@ export function ProductList({ onNew, onEdit, onView }: Props) {
 
                 {/* Clickable preview area */}
                 <div
-                  onClick={() => onView(p)}
+                  onClick={() => navigate(`/products/${p.slug}`)}
                   style={{ padding: '18px 20px 14px', cursor: 'pointer' }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
@@ -109,13 +105,13 @@ export function ProductList({ onNew, onEdit, onView }: Props) {
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: 8, padding: '0 20px 18px' }}>
                   <button
-                    onClick={() => onView(p)}
+                    onClick={() => navigate(`/products/${p.slug}`)}
                     style={{ flex: 1, padding: '8px', background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: 7, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
                   >
                     Ver página
                   </button>
                   <button
-                    onClick={() => onEdit(p)}
+                    onClick={() => navigate(`/products/${p.id}/edit`)}
                     style={{ flex: 1, padding: '8px', background: '#f8fafc', color: '#334155', border: '1px solid #e2e8f0', borderRadius: 7, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
                   >
                     Editar

@@ -8,6 +8,18 @@ export async function fetchProducts(): Promise<Product[]> {
   return res.json();
 }
 
+export async function fetchProduct(id: number): Promise<Product> {
+  const res = await fetch(`${API_URL}/products/${id}`);
+  if (!res.ok) throw new Error('Produto não encontrado');
+  return res.json();
+}
+
+export async function fetchProductBySlug(slug: string): Promise<Product> {
+  const res = await fetch(`${API_URL}/products/slug/${slug}`);
+  if (!res.ok) throw new Error('Produto não encontrado');
+  return res.json();
+}
+
 export async function createProduct(
   product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<Product> {
