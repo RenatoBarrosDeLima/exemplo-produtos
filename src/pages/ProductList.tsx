@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Navbar } from '../components/Navbar';
 import type { Product } from '../types/product';
 import { fetchProducts, deleteProduct } from '../api/products';
 import { SECTION_LABELS } from '../types/product';
@@ -25,7 +26,8 @@ export function ProductList() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f1f5f9', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#f1f5f9', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', display: 'flex', flexDirection: 'column' }}>
+      <Navbar />
 
       {/* Header */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0' }}>
