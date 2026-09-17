@@ -3,14 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import type { Product, PageSection, SectionType } from '../types/product';
 import { SECTION_LABELS, createDefaultSection } from '../types/product';
 import { generatePageHtml } from '../utils/pageGenerator';
-import { fetchProduct, createProduct, updateProduct } from '../api/products';
+import { fetchProduct, createProduct, updateProduct, uploadImage } from '../api/products';
 import { SectionEditor } from '../components/editor/SectionEditor';
 
 function slugify(str: string) {
   return str.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-const BLANK: Product = { name: 'Novo Produto', slug: 'novo-produto', sections: [] };
+const BLANK: Product = { name: 'Novo Produto', slug: 'novo-produto', description: '', coverImage: '', sections: [] };
 
 const SECTION_TYPES: Array<{ type: SectionType; desc: string }> = [
   { type: 'text',    desc: 'Bloco de texto livre' },
@@ -72,9 +72,11 @@ export function ProductEditor() {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(!!id);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [error, setError] = useState('');
   const [savedOk, setSavedOk] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -116,17 +118,39 @@ export function ProductEditor() {
     });
   };
 
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCover(true);
+    setError('');
+    try {
+      const { url } = await uploadImage(file);
+      setProduct(p => ({ ...p, coverImage: url }));
+    } catch {
+      setError('Erro ao enviar foto de capa');
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!product.name.trim()) { setError('Nome é obrigatório'); return; }
     if (!product.slug.trim()) { setError('Slug é obrigatório'); return; }
+    if (!product.description.trim()) { setError('Descrição é obrigatória'); return; }
+    if (!product.coverImage.trim()) { setError('Foto de capa é obrigatória'); return; }
     setSaving(true); setError(''); setSavedOk(false);
     try {
-      const payload = { name: product.name, slug: product.slug, sections: product.sections };
+      const payload = {
+        name: product.name,
+        slug: product.slug,
+        description: product.description,
+        coverImage: product.coverImage,
+        sections: product.sections,
+      };
       const result = product.id ? await updateProduct(product.id, payload) : await createProduct(payload);
       setProduct(result);
       setSavedOk(true);
       setTimeout(() => setSavedOk(false), 3000);
-      // Se era novo produto, redireciona para a URL de edição com o ID real
       if (!id && result.id) {
         navigate(`/products/${result.id}/edit`, { replace: true });
       }
@@ -170,7 +194,7 @@ export function ProductEditor() {
           style={{ padding: '6px 14px', background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', fontSize: 13, color: '#64748b' }}>
           ↗ Abrir
         </button>
-        {error && <span style={{ fontSize: 12, color: '#ef4444' }}>{error}</span>}
+        {error && <span style={{ fontSize: 12, color: '#ef4444', maxWidth: 240 }}>{error}</span>}
         {savedOk && <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}>✓ Salvo</span>}
         <button onClick={handleSave} disabled={saving} style={{
           padding: '7px 20px', background: saving ? '#818cf8' : '#4f46e5', color: '#fff',
@@ -200,6 +224,40 @@ export function ProductEditor() {
                   Auto
                 </button>
               </div>
+            </Field>
+            <Field label="Descrição *">
+              <textarea
+                style={{ ...inp, resize: 'vertical', minHeight: 72, fontFamily: 'inherit' }}
+                value={product.description}
+                onChange={e => setProduct(p => ({ ...p, description: e.target.value }))}
+                placeholder="Descreva o produto em poucas frases…"
+              />
+            </Field>
+            <Field label="Foto de capa *">
+              <input ref={coverInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCoverUpload} />
+              {product.coverImage ? (
+                <div style={{ position: 'relative' }}>
+                  <img
+                    src={product.coverImage}
+                    alt="Capa"
+                    style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 6, border: '1px solid #e2e8f0', display: 'block' }}
+                  />
+                  <button
+                    onClick={() => coverInputRef.current?.click()}
+                    style={{ position: 'absolute', bottom: 6, right: 6, background: 'rgba(0,0,0,.55)', color: '#fff', border: 'none', borderRadius: 5, padding: '4px 10px', cursor: 'pointer', fontSize: 11 }}
+                  >
+                    Trocar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => coverInputRef.current?.click()}
+                  disabled={uploadingCover}
+                  style={{ width: '100%', padding: '18px 0', background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: 6, cursor: 'pointer', fontSize: 13, color: '#94a3b8', textAlign: 'center' }}
+                >
+                  {uploadingCover ? 'Enviando…' : '+ Adicionar foto de capa'}
+                </button>
+              )}
             </Field>
           </div>
 

@@ -29,6 +29,8 @@ export interface Product {
   id?: number;
   name: string;
   slug: string;
+  description: string;
+  coverImage: string;
   sections: PageSection[];
   createdAt?: string;
   updatedAt?: string;

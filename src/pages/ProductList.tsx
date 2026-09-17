@@ -25,11 +25,11 @@ export function ProductList() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#f1f5f9', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
 
       {/* Header */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 32px', display: 'flex', alignItems: 'center' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 32px', display: 'flex', alignItems: 'center' }}>
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: 0 }}>Páginas de Produto</h1>
             <p style={{ fontSize: 13, color: '#64748b', margin: '3px 0 0' }}>Editor visual de páginas web para seus produtos</p>
@@ -44,7 +44,7 @@ export function ProductList() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px' }}>
 
         {loading && (
           <div style={{ textAlign: 'center', padding: '80px 0', color: '#94a3b8', fontSize: 14 }}>Carregando…</div>
@@ -67,30 +67,50 @@ export function ProductList() {
         )}
 
         {products.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
             {products.map(p => (
               <div
                 key={p.id}
-                style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden', transition: 'box-shadow .15s' }}
-                onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,.08)')}
-                onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+                style={{ background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0', overflow: 'hidden', transition: 'box-shadow .15s, transform .15s', display: 'flex', flexDirection: 'column' }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 28px rgba(0,0,0,.10)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
               >
-                {/* Color bar */}
-                <div style={{ height: 5, background: 'linear-gradient(to right, #4f46e5, #7c3aed)' }} />
-
-                {/* Clickable preview area */}
+                {/* Cover image */}
                 <div
                   onClick={() => navigate(`/products/${p.slug}`)}
-                  style={{ padding: '18px 20px 14px', cursor: 'pointer' }}
+                  style={{ cursor: 'pointer', height: 180, background: '#f1f5f9', overflow: 'hidden', position: 'relative', flexShrink: 0 }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</h3>
-                      <div style={{ fontSize: 12, color: '#94a3b8' }}>/{p.slug}</div>
+                  {p.coverImage ? (
+                    <img
+                      src={p.coverImage}
+                      alt={p.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1', fontSize: 13 }}>
+                      Sem foto de capa
                     </div>
+                  )}
+                  {/* Gradient overlay with slug */}
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px 14px 8px', background: 'linear-gradient(to top, rgba(0,0,0,.55), transparent)' }}>
+                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,.8)', fontWeight: 500 }}>/{p.slug}</span>
                   </div>
+                </div>
 
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, minHeight: 22 }}>
+                {/* Content */}
+                <div style={{ padding: '16px 18px', flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.3 }}>{p.name}</h3>
+
+                  {p.description && (
+                    <p style={{
+                      fontSize: 13, color: '#64748b', margin: 0, lineHeight: 1.5,
+                      display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                    }}>
+                      {p.description}
+                    </p>
+                  )}
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 2 }}>
                     {(p.sections ?? []).map(s => (
                       <span key={s.id} style={{ fontSize: 11, background: '#f1f5f9', color: '#475569', padding: '2px 8px', borderRadius: 99, fontWeight: 500 }}>
                         {SECTION_LABELS[s.type as SectionType] ?? s.type}
@@ -103,7 +123,7 @@ export function ProductList() {
                 </div>
 
                 {/* Actions */}
-                <div style={{ display: 'flex', gap: 8, padding: '0 20px 18px' }}>
+                <div style={{ display: 'flex', gap: 8, padding: '0 18px 16px' }}>
                   <button
                     onClick={() => navigate(`/products/${p.slug}`)}
                     style={{ flex: 1, padding: '8px', background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: 7, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
