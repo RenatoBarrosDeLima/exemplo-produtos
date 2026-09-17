@@ -16,6 +16,13 @@ export function Navbar() {
     navigate('/login');
   };
 
+  const initials = user?.name
+    .split(' ')
+    .map(n => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase() ?? '';
+
   return (
     <div style={{ background: '#0f172a', display: 'flex', alignItems: 'center', gap: 2, padding: '0 24px', height: 44, flexShrink: 0 }}>
       <span style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginRight: 20, letterSpacing: '-.3px' }}>
@@ -51,24 +58,16 @@ export function Navbar() {
 
       {user && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {user.avatarUrl ? (
-            <img
-              src={user.avatarUrl}
-              alt={user.name}
-              style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(255,255,255,.25)' }}
-            />
-          ) : (
-            <div style={{
-              width: 26, height: 26, borderRadius: '50%',
-              background: 'rgba(255,255,255,.15)',
-              color: '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, fontWeight: 700,
-            }}>
-              {user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
-            </div>
-          )}
-          <span style={{ fontSize: 13, color: 'rgba(255,255,255,.75)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{
+            width: 26, height: 26, borderRadius: '50%',
+            background: 'rgba(255,255,255,.15)',
+            color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 11, fontWeight: 700, flexShrink: 0,
+          }}>
+            {initials}
+          </div>
+          <span style={{ fontSize: 13, color: 'rgba(255,255,255,.75)', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {user.name}
           </span>
           <button

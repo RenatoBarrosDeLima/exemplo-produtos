@@ -2,31 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import type { User } from '../types/user';
-import { ROLE_LABELS, ROLE_COLORS } from '../types/user';
 import { fetchUsers, deleteUser } from '../api/users';
-
-function Avatar({ user }: { user: User }) {
-  if (user.avatarUrl) {
-    return (
-      <img
-        src={user.avatarUrl}
-        alt={user.name}
-        style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
-      />
-    );
-  }
-  const initials = user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-  const colors = [
-    ['#dbeafe','#1d4ed8'], ['#dcfce7','#15803d'], ['#fce7f3','#9d174d'],
-    ['#ede9fe','#6d28d9'], ['#fef3c7','#92400e'], ['#ffedd5','#c2410c'],
-  ];
-  const [bg, text] = colors[(user.name.charCodeAt(0) ?? 0) % colors.length];
-  return (
-    <div style={{ width: 36, height: 36, borderRadius: '50%', background: bg, color: text, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
-      {initials}
-    </div>
-  );
-}
 
 export function UserList() {
   const navigate = useNavigate();
@@ -50,8 +26,27 @@ export function UserList() {
 
   const filtered = users.filter(u =>
     u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
+    u.email.toLowerCase().includes(search.toLowerCase()) ||
+    (u.cpf ?? '').includes(search) ||
+    (u.phone ?? '').includes(search)
   );
+
+  const displayed = search ? filtered : users;
+
+  // Initials avatar
+  const Initials = ({ name }: { name: string }) => {
+    const init = name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+    const colors = [
+      ['#dbeafe','#1d4ed8'], ['#dcfce7','#15803d'], ['#fce7f3','#9d174d'],
+      ['#ede9fe','#6d28d9'], ['#fef3c7','#92400e'], ['#ffedd5','#c2410c'],
+    ];
+    const [bg, text] = colors[(name.charCodeAt(0) ?? 0) % colors.length];
+    return (
+      <div style={{ width: 34, height: 34, borderRadius: '50%', background: bg, color: text, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+        {init}
+      </div>
+    );
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: '#f1f5f9', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', display: 'flex', flexDirection: 'column' }}>
@@ -59,7 +54,7 @@ export function UserList() {
 
       {/* Header */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '20px 32px', display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '20px 32px', display: 'flex', alignItems: 'center', gap: 16 }}>
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: 0 }}>Usuários</h1>
             <p style={{ fontSize: 13, color: '#64748b', margin: '3px 0 0' }}>
@@ -70,8 +65,8 @@ export function UserList() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar por nome ou e-mail…"
-            style={{ padding: '8px 14px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, outline: 'none', width: 240, color: '#1e293b', background: '#f8fafc' }}
+            placeholder="Buscar por nome, e-mail, CPF ou telefone…"
+            style={{ padding: '8px 14px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, outline: 'none', width: 280, color: '#1e293b', background: '#f8fafc' }}
           />
           <button
             onClick={() => navigate('/users/new')}
@@ -82,7 +77,7 @@ export function UserList() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '28px 32px', width: '100%' }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '28px 32px', width: '100%', boxSizing: 'border-box' }}>
 
         {loading && (
           <div style={{ textAlign: 'center', padding: '80px 0', color: '#94a3b8', fontSize: 14 }}>Carregando…</div>
@@ -108,64 +103,58 @@ export function UserList() {
         {!loading && users.length > 0 && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
             {/* Table header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto auto', gap: 0, padding: '10px 20px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.6px' }}>Usuário</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.6px' }}>E-mail</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.6px', minWidth: 90 }}>Perfil</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.6px', minWidth: 90 }}>Ações</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr auto', gap: 0, padding: '10px 20px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+              {['Usuário', 'E-mail', 'CPF', 'Telefone', 'Ações'].map(h => (
+                <span key={h} style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.6px' }}>{h}</span>
+              ))}
             </div>
 
-            {/* Rows */}
-            {(search ? filtered : users).length === 0 && (
+            {displayed.length === 0 && (
               <div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
                 Nenhum resultado para "{search}"
               </div>
             )}
-            {(search ? filtered : users).map((u, i) => {
-              const roleColor = ROLE_COLORS[u.role];
-              return (
-                <div
-                  key={u.id}
-                  style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto auto', gap: 0, padding: '14px 20px', borderBottom: i < users.length - 1 ? '1px solid #f1f5f9' : 'none', alignItems: 'center' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#fafbfc')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                >
-                  {/* Name + avatar */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Avatar user={u} />
-                    <span style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{u.name}</span>
-                  </div>
 
-                  {/* Email */}
-                  <span style={{ fontSize: 13, color: '#64748b' }}>{u.email}</span>
-
-                  {/* Role badge */}
-                  <span style={{ fontSize: 12, fontWeight: 600, background: roleColor.bg, color: roleColor.text, border: `1px solid ${roleColor.border}`, borderRadius: 99, padding: '3px 10px', minWidth: 90, textAlign: 'center' }}>
-                    {ROLE_LABELS[u.role]}
-                  </span>
-
-                  {/* Actions */}
-                  <div style={{ display: 'flex', gap: 6, minWidth: 90, justifyContent: 'flex-end' }}>
-                    <button
-                      onClick={() => navigate(`/users/${u.id}/edit`)}
-                      style={{ padding: '5px 12px', background: '#f8fafc', color: '#334155', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
-                      onMouseEnter={e => { e.currentTarget.style.background = '#eef2ff'; e.currentTarget.style.color = '#4f46e5'; e.currentTarget.style.borderColor = '#c7d2fe'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#334155'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => u.id && handleDelete(u.id, u.name)}
-                      style={{ padding: '5px 10px', background: 'none', color: '#cbd5e1', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}
-                      onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.borderColor = '#fca5a5'; }}
-                      onMouseLeave={e => { e.currentTarget.style.color = '#cbd5e1'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
-                    >
-                      ×
-                    </button>
-                  </div>
+            {displayed.map((u, i) => (
+              <div
+                key={u.id}
+                style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr auto', gap: 0, padding: '14px 20px', borderBottom: i < displayed.length - 1 ? '1px solid #f1f5f9' : 'none', alignItems: 'center' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#fafbfc')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                {/* Name + initials */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Initials name={u.name} />
+                  <span style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{u.name}</span>
                 </div>
-              );
-            })}
+
+                <span style={{ fontSize: 13, color: '#64748b' }}>{u.email}</span>
+
+                <span style={{ fontSize: 13, color: '#475569', fontFamily: 'monospace' }}>{u.cpf || '—'}</span>
+
+                <span style={{ fontSize: 13, color: '#475569' }}>{u.phone || '—'}</span>
+
+                {/* Actions */}
+                <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => navigate(`/users/${u.id}/edit`)}
+                    style={{ padding: '5px 12px', background: '#f8fafc', color: '#334155', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#eef2ff'; e.currentTarget.style.color = '#4f46e5'; e.currentTarget.style.borderColor = '#c7d2fe'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#334155'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => u.id && handleDelete(u.id, u.name)}
+                    style={{ padding: '5px 10px', background: 'none', color: '#cbd5e1', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}
+                    onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.borderColor = '#fca5a5'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = '#cbd5e1'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

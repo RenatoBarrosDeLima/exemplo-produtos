@@ -1,11 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
-import type { UserRole } from '../types/user';
-import { ROLE_LABELS } from '../types/user';
 import { fetchUser, createUser, updateUser } from '../api/users';
-
-const ROLES: UserRole[] = ['admin', 'editor', 'viewer'];
 
 const inp: React.CSSProperties = {
   width: '100%', padding: '10px 12px', border: '1px solid #e2e8f0',
@@ -25,7 +21,24 @@ function Field({ label, required, children, error }: { label: string; required?:
   );
 }
 
-type FormErrors = Partial<Record<'name' | 'email' | 'role' | 'password', string>>;
+// Masks
+function maskCpf(v: string) {
+  return v.replace(/\D/g, '')
+    .slice(0, 11)
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+}
+
+function maskPhone(v: string) {
+  const d = v.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 10) {
+    return d.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d)/, '$1-$2');
+  }
+  return d.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2');
+}
+
+type FormErrors = Partial<Record<'name' | 'email' | 'password' | 'cpf' | 'phone', string>>;
 
 export function UserForm() {
   const { id } = useParams<{ id: string }>();
@@ -34,9 +47,9 @@ export function UserForm() {
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<UserRole>('viewer');
-  const [avatarUrl, setAvatarUrl] = useState('');
   const [password, setPassword] = useState('');
+  const [cpf, setCpf] = useState('');
+  const [phone, setPhone] = useState('');
 
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
@@ -49,8 +62,8 @@ export function UserForm() {
       .then(u => {
         setName(u.name);
         setEmail(u.email);
-        setRole(u.role);
-        setAvatarUrl(u.avatarUrl ?? '');
+        setCpf(u.cpf ?? '');
+        setPhone(u.phone ?? '');
       })
       .catch(() => setApiError('Usuário não encontrado'))
       .finally(() => setLoading(false));
@@ -61,9 +74,12 @@ export function UserForm() {
     if (!name.trim()) errors.name = 'Nome é obrigatório';
     if (!email.trim()) errors.email = 'E-mail é obrigatório';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = 'E-mail inválido';
-    if (!role) errors.role = 'Perfil é obrigatório';
     if (!isEdit && !password.trim()) errors.password = 'Senha é obrigatória';
     else if (password && password.length < 6) errors.password = 'Senha deve ter pelo menos 6 caracteres';
+    if (!cpf.trim()) errors.cpf = 'CPF é obrigatório';
+    else if (cpf.replace(/\D/g, '').length < 11) errors.cpf = 'CPF inválido';
+    if (!phone.trim()) errors.phone = 'Telefone é obrigatório';
+    else if (phone.replace(/\D/g, '').length < 10) errors.phone = 'Telefone inválido';
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -73,7 +89,7 @@ export function UserForm() {
     setSaving(true);
     setApiError('');
     try {
-      const base = { name: name.trim(), email: email.trim(), role, avatarUrl: avatarUrl.trim() || undefined };
+      const base = { name: name.trim(), email: email.trim(), cpf, phone };
       if (isEdit) {
         const payload = password ? { ...base, password } : base;
         await updateUser(Number(id), payload);
@@ -146,7 +162,7 @@ export function UserForm() {
           </Field>
 
           <Field
-            label={isEdit ? 'Nova senha (deixe em branco para não alterar)' : 'Senha'}
+            label={isEdit ? 'Nova senha' : 'Senha'}
             required={!isEdit}
             error={fieldErrors.password}
           >
@@ -155,50 +171,33 @@ export function UserForm() {
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder={isEdit ? 'Deixe em branco para manter a senha atual' : 'Mínimo 6 caracteres'}
-              autoComplete={isEdit ? 'new-password' : 'new-password'}
+              placeholder={isEdit ? '' : 'Mínimo 6 caracteres'}
+              autoComplete="new-password"
             />
           </Field>
 
-          <Field label="Perfil" required error={fieldErrors.role}>
-            <div style={{ display: 'flex', gap: 10 }}>
-              {ROLES.map(r => (
-                <button
-                  key={r}
-                  onClick={() => setRole(r)}
-                  style={{
-                    flex: 1, padding: '10px 0', border: `2px solid ${role === r ? '#4f46e5' : '#e2e8f0'}`,
-                    borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                    background: role === r ? '#eef2ff' : '#f8fafc',
-                    color: role === r ? '#4338ca' : '#64748b',
-                    transition: 'all .1s',
-                  }}
-                >
-                  {ROLE_LABELS[r]}
-                </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-              <p style={{ flex: 1, fontSize: 11, color: '#94a3b8', margin: 0, textAlign: 'center' }}>Acesso total</p>
-              <p style={{ flex: 1, fontSize: 11, color: '#94a3b8', margin: 0, textAlign: 'center' }}>Cria e edita</p>
-              <p style={{ flex: 1, fontSize: 11, color: '#94a3b8', margin: 0, textAlign: 'center' }}>Só visualiza</p>
-            </div>
-          </Field>
+          {/* CPF + Telefone lado a lado */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <Field label="CPF" required error={fieldErrors.cpf}>
+              <input
+                style={{ ...inp, borderColor: fieldErrors.cpf ? '#fca5a5' : '#e2e8f0' }}
+                value={cpf}
+                onChange={e => setCpf(maskCpf(e.target.value))}
+                placeholder="000.000.000-00"
+                inputMode="numeric"
+              />
+            </Field>
 
-          <Field label="URL do avatar">
-            <input
-              style={inp}
-              value={avatarUrl}
-              onChange={e => setAvatarUrl(e.target.value)}
-              placeholder="https://... (opcional)"
-            />
-            {avatarUrl && (
-              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <img src={avatarUrl} alt="preview" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid #e2e8f0' }} onError={e => (e.currentTarget.style.display = 'none')} />
-                <span style={{ fontSize: 12, color: '#64748b' }}>Preview do avatar</span>
-              </div>
-            )}
-          </Field>
+            <Field label="Telefone" required error={fieldErrors.phone}>
+              <input
+                style={{ ...inp, borderColor: fieldErrors.phone ? '#fca5a5' : '#e2e8f0' }}
+                value={phone}
+                onChange={e => setPhone(maskPhone(e.target.value))}
+                placeholder="(00) 00000-0000"
+                inputMode="numeric"
+              />
+            </Field>
+          </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8, paddingTop: 20, borderTop: '1px solid #f1f5f9' }}>
             <button

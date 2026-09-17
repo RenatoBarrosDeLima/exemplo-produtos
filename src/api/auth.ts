@@ -6,8 +6,6 @@ export interface AuthUser {
   id: number;
   name: string;
   email: string;
-  role: string;
-  avatarUrl?: string;
 }
 
 export function getToken(): string | null {

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import { getToken, getSavedUser, setAuth, clearAuth, login as apiLogin } from '../api/auth';
 import type { AuthUser } from '../api/auth';
 
@@ -13,7 +13,6 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => {
-    // Restore from localStorage on mount
     if (getToken()) return getSavedUser();
     return null;
   });
