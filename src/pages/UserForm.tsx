@@ -25,7 +25,7 @@ function Field({ label, required, children, error }: { label: string; required?:
   );
 }
 
-type FormErrors = Partial<Record<'name' | 'email' | 'role', string>>;
+type FormErrors = Partial<Record<'name' | 'email' | 'role' | 'password', string>>;
 
 export function UserForm() {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +36,7 @@ export function UserForm() {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<UserRole>('viewer');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [password, setPassword] = useState('');
 
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
@@ -61,6 +62,8 @@ export function UserForm() {
     if (!email.trim()) errors.email = 'E-mail é obrigatório';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = 'E-mail inválido';
     if (!role) errors.role = 'Perfil é obrigatório';
+    if (!isEdit && !password.trim()) errors.password = 'Senha é obrigatória';
+    else if (password && password.length < 6) errors.password = 'Senha deve ter pelo menos 6 caracteres';
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -70,11 +73,12 @@ export function UserForm() {
     setSaving(true);
     setApiError('');
     try {
-      const payload = { name: name.trim(), email: email.trim(), role, avatarUrl: avatarUrl.trim() || undefined };
+      const base = { name: name.trim(), email: email.trim(), role, avatarUrl: avatarUrl.trim() || undefined };
       if (isEdit) {
+        const payload = password ? { ...base, password } : base;
         await updateUser(Number(id), payload);
       } else {
-        await createUser(payload);
+        await createUser({ ...base, password });
       }
       navigate('/users');
     } catch (e: unknown) {
@@ -99,7 +103,6 @@ export function UserForm() {
     <div style={{ minHeight: '100vh', background: '#f1f5f9', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
 
-      {/* Page header */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0' }}>
         <div style={{ maxWidth: 600, margin: '0 auto', padding: '20px 32px', display: 'flex', alignItems: 'center', gap: 14 }}>
           <button
@@ -114,7 +117,6 @@ export function UserForm() {
         </div>
       </div>
 
-      {/* Form */}
       <div style={{ maxWidth: 600, margin: '32px auto', padding: '0 32px', width: '100%' }}>
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: '28px 32px' }}>
 
@@ -143,6 +145,21 @@ export function UserForm() {
             />
           </Field>
 
+          <Field
+            label={isEdit ? 'Nova senha (deixe em branco para não alterar)' : 'Senha'}
+            required={!isEdit}
+            error={fieldErrors.password}
+          >
+            <input
+              style={{ ...inp, borderColor: fieldErrors.password ? '#fca5a5' : '#e2e8f0' }}
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder={isEdit ? 'Deixe em branco para manter a senha atual' : 'Mínimo 6 caracteres'}
+              autoComplete={isEdit ? 'new-password' : 'new-password'}
+            />
+          </Field>
+
           <Field label="Perfil" required error={fieldErrors.role}>
             <div style={{ display: 'flex', gap: 10 }}>
               {ROLES.map(r => (
@@ -168,7 +185,7 @@ export function UserForm() {
             </div>
           </Field>
 
-          <Field label="URL do avatar" >
+          <Field label="URL do avatar">
             <input
               style={inp}
               value={avatarUrl}

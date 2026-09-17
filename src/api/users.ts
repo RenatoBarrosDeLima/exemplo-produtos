@@ -1,4 +1,5 @@
 import type { User } from '../types/user';
+import { authHeaders } from './auth';
 
 const API_URL = 'http://localhost:3000';
 
@@ -12,13 +13,13 @@ async function extractError(res: Response, fallback: string): Promise<string> {
 }
 
 export async function fetchUsers(): Promise<User[]> {
-  const res = await fetch(`${API_URL}/users`);
+  const res = await fetch(`${API_URL}/users`, { headers: authHeaders() });
   if (!res.ok) throw new Error('Erro ao buscar usuários');
   return res.json();
 }
 
 export async function fetchUser(id: number): Promise<User> {
-  const res = await fetch(`${API_URL}/users/${id}`);
+  const res = await fetch(`${API_URL}/users/${id}`, { headers: authHeaders() });
   if (!res.ok) throw new Error('Usuário não encontrado');
   return res.json();
 }
@@ -28,7 +29,7 @@ export async function createUser(
 ): Promise<User> {
   const res = await fetch(`${API_URL}/users`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(user),
   });
   if (!res.ok) throw new Error(await extractError(res, 'Erro ao criar usuário'));
@@ -41,7 +42,7 @@ export async function updateUser(
 ): Promise<User> {
   const res = await fetch(`${API_URL}/users/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(user),
   });
   if (!res.ok) throw new Error(await extractError(res, 'Erro ao atualizar usuário'));
@@ -49,6 +50,9 @@ export async function updateUser(
 }
 
 export async function deleteUser(id: number): Promise<void> {
-  const res = await fetch(`${API_URL}/users/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${API_URL}/users/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
   if (!res.ok) throw new Error('Erro ao remover usuário');
 }

@@ -1,4 +1,5 @@
 import type { Product } from '../types/product';
+import { authHeaders } from './auth';
 
 const API_URL = 'http://localhost:3000';
 
@@ -34,7 +35,7 @@ export async function createProduct(
 ): Promise<Product> {
   const res = await fetch(`${API_URL}/products`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(product),
   });
   if (!res.ok) throw new Error(await extractError(res, 'Erro ao criar produto'));
@@ -47,7 +48,7 @@ export async function updateProduct(
 ): Promise<Product> {
   const res = await fetch(`${API_URL}/products/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(product),
   });
   if (!res.ok) throw new Error(await extractError(res, 'Erro ao atualizar produto'));
@@ -55,7 +56,10 @@ export async function updateProduct(
 }
 
 export async function deleteProduct(id: number): Promise<void> {
-  const res = await fetch(`${API_URL}/products/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${API_URL}/products/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
   if (!res.ok) throw new Error('Erro ao deletar produto');
 }
 
@@ -64,6 +68,7 @@ export async function uploadImage(file: File): Promise<{ url: string }> {
   form.append('file', file);
   const res = await fetch(`${API_URL}/products/upload`, {
     method: 'POST',
+    headers: authHeaders(),
     body: form,
   });
   if (!res.ok) throw new Error(`Erro ao enviar imagem: ${await res.text()}`);

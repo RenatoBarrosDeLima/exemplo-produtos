@@ -1,16 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Navbar } from '../components/Navbar';
 import type { Product } from '../types/product';
 import { fetchProducts, deleteProduct } from '../api/products';
 import { SECTION_LABELS } from '../types/product';
 import type { SectionType } from '../types/product';
+import { useAuth } from '../context/AuthContext';
 
 export function ProductList() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchProducts()
@@ -19,15 +22,33 @@ export function ProductList() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
   const handleDelete = async (id: number, name: string) => {
     if (!confirm(`Remover "${name}"?`)) return;
     await deleteProduct(id).catch(() => alert('Erro ao remover'));
     setProducts(ps => ps.filter(p => p.id !== id));
   };
 
+  const MENU_ACTIONS = [
+    {
+      label: 'Usuários',
+      icon: '👤',
+      description: 'Gerenciar usuários do sistema',
+      onClick: () => { setMenuOpen(false); navigate('/users'); },
+    },
+  ];
+
   return (
-    <div style={{ minHeight: '100vh', background: '#f1f5f9', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', display: 'flex', flexDirection: 'column' }}>
-      <Navbar />
+    <div style={{ minHeight: '100vh', background: '#f1f5f9', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
 
       {/* Header */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0' }}>
@@ -37,12 +58,80 @@ export function ProductList() {
             <p style={{ fontSize: 13, color: '#64748b', margin: '3px 0 0' }}>Editor visual de páginas web para seus produtos</p>
           </div>
           <div style={{ flex: 1 }} />
-          <button
-            onClick={() => navigate('/products/new')}
-            style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
-          >
-            + Nova página
-          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {isAuthenticated ? (
+              <>
+                <button
+                  onClick={() => navigate('/products/new')}
+                  style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
+                >
+                  + Nova página
+                </button>
+
+                {/* Dropdown menu */}
+                <div ref={menuRef} style={{ position: 'relative' }}>
+                  <button
+                    onClick={() => setMenuOpen(o => !o)}
+                    style={{
+                      background: menuOpen ? '#f1f5f9' : '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: 8,
+                      padding: '10px 12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      transition: 'all .1s',
+                    }}
+                    title="Mais ações"
+                    onMouseEnter={e => { if (!menuOpen) (e.currentTarget as HTMLButtonElement).style.background = '#f1f5f9'; }}
+                    onMouseLeave={e => { if (!menuOpen) (e.currentTarget as HTMLButtonElement).style.background = '#f8fafc'; }}
+                  >
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Ações</span>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ marginLeft: 2, transition: 'transform .15s', transform: menuOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                      <path d="M3 5l4 4 4-4" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+
+                  {menuOpen && (
+                    <div style={{
+                      position: 'absolute', top: 'calc(100% + 6px)', right: 0,
+                      background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10,
+                      boxShadow: '0 8px 24px rgba(0,0,0,.10)', minWidth: 210,
+                      zIndex: 100, overflow: 'hidden', padding: '6px 0',
+                    }}>
+                      <div style={{ padding: '6px 14px 8px', borderBottom: '1px solid #f1f5f9', marginBottom: 4 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.6px' }}>Ações</span>
+                      </div>
+                      {MENU_ACTIONS.map(action => (
+                        <button
+                          key={action.label}
+                          onClick={action.onClick}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#f8fafc'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; }}
+                        >
+                          <span style={{ fontSize: 16, flexShrink: 0 }}>{action.icon}</span>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{action.label}</div>
+                            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>{action.description}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <button
+                onClick={() => navigate('/login')}
+                style={{ background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 20px', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
+              >
+                Entrar
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -61,9 +150,14 @@ export function ProductList() {
         {!loading && products.length === 0 && !error && (
           <div style={{ textAlign: 'center', padding: '100px 0' }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 8px' }}>Nenhuma página criada</h2>
-            <p style={{ fontSize: 14, color: '#64748b', margin: '0 0 28px' }}>Crie sua primeira página de produto com editor visual</p>
-            <button onClick={() => navigate('/products/new')} style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
-              Criar primeira página
+            <p style={{ fontSize: 14, color: '#64748b', margin: '0 0 28px' }}>
+              {isAuthenticated ? 'Crie sua primeira página de produto com editor visual' : 'Entre para criar e gerenciar páginas de produto'}
+            </p>
+            <button
+              onClick={() => isAuthenticated ? navigate('/products/new') : navigate('/login')}
+              style={{ background: '#4f46e5', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
+            >
+              {isAuthenticated ? 'Criar primeira página' : 'Fazer login'}
             </button>
           </div>
         )}
@@ -83,17 +177,12 @@ export function ProductList() {
                   style={{ cursor: 'pointer', height: 180, background: '#f1f5f9', overflow: 'hidden', position: 'relative', flexShrink: 0 }}
                 >
                   {p.coverImage ? (
-                    <img
-                      src={p.coverImage}
-                      alt={p.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                    />
+                    <img src={p.coverImage} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                   ) : (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1', fontSize: 13 }}>
                       Sem foto de capa
                     </div>
                   )}
-                  {/* Gradient overlay with slug */}
                   <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px 14px 8px', background: 'linear-gradient(to top, rgba(0,0,0,.55), transparent)' }}>
                     <span style={{ fontSize: 11, color: 'rgba(255,255,255,.8)', fontWeight: 500 }}>/{p.slug}</span>
                   </div>
@@ -102,16 +191,11 @@ export function ProductList() {
                 {/* Content */}
                 <div style={{ padding: '16px 18px', flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.3 }}>{p.name}</h3>
-
                   {p.description && (
-                    <p style={{
-                      fontSize: 13, color: '#64748b', margin: 0, lineHeight: 1.5,
-                      display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                    }}>
+                    <p style={{ fontSize: 13, color: '#64748b', margin: 0, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                       {p.description}
                     </p>
                   )}
-
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 2 }}>
                     {(p.sections ?? []).map(s => (
                       <span key={s.id} style={{ fontSize: 11, background: '#f1f5f9', color: '#475569', padding: '2px 8px', borderRadius: 99, fontWeight: 500 }}>
@@ -132,20 +216,24 @@ export function ProductList() {
                   >
                     Ver página
                   </button>
-                  <button
-                    onClick={() => navigate(`/products/${p.id}/edit`)}
-                    style={{ flex: 1, padding: '8px', background: '#f8fafc', color: '#334155', border: '1px solid #e2e8f0', borderRadius: 7, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => p.id && handleDelete(p.id, p.name)}
-                    style={{ padding: '8px 12px', background: 'none', color: '#cbd5e1', border: '1px solid #e2e8f0', borderRadius: 7, cursor: 'pointer', fontSize: 13 }}
-                    onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.borderColor = '#fca5a5'; }}
-                    onMouseLeave={e => { e.currentTarget.style.color = '#cbd5e1'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
-                  >
-                    ×
-                  </button>
+                  {isAuthenticated && (
+                    <>
+                      <button
+                        onClick={() => navigate(`/products/${p.id}/edit`)}
+                        style={{ flex: 1, padding: '8px', background: '#f8fafc', color: '#334155', border: '1px solid #e2e8f0', borderRadius: 7, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => p.id && handleDelete(p.id, p.name)}
+                        style={{ padding: '8px 12px', background: 'none', color: '#cbd5e1', border: '1px solid #e2e8f0', borderRadius: 7, cursor: 'pointer', fontSize: 13 }}
+                        onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.borderColor = '#fca5a5'; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = '#cbd5e1'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                      >
+                        ×
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}

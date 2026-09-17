@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const NAV_ITEMS = [
   { label: 'Produtos', path: '/', match: (p: string) => p === '/' || p.startsWith('/products') },
@@ -8,9 +9,19 @@ const NAV_ITEMS = [
 export function Navbar() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <div style={{ background: '#0f172a', display: 'flex', alignItems: 'center', gap: 2, padding: '0 24px', height: 44, flexShrink: 0 }}>
+      <span style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginRight: 20, letterSpacing: '-.3px' }}>
+        Camerite
+      </span>
+
       {NAV_ITEMS.map(item => {
         const active = item.match(pathname);
         return (
@@ -35,6 +46,50 @@ export function Navbar() {
           </button>
         );
       })}
+
+      <div style={{ flex: 1 }} />
+
+      {user && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {user.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt={user.name}
+              style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(255,255,255,.25)' }}
+            />
+          ) : (
+            <div style={{
+              width: 26, height: 26, borderRadius: '50%',
+              background: 'rgba(255,255,255,.15)',
+              color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 11, fontWeight: 700,
+            }}>
+              {user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
+            </div>
+          )}
+          <span style={{ fontSize: 13, color: 'rgba(255,255,255,.75)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {user.name}
+          </span>
+          <button
+            onClick={handleLogout}
+            style={{
+              padding: '4px 12px',
+              background: 'none',
+              border: '1px solid rgba(255,255,255,.2)',
+              borderRadius: 6,
+              cursor: 'pointer',
+              fontSize: 12,
+              color: 'rgba(255,255,255,.55)',
+              transition: 'all .15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.5)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,.55)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.2)'; }}
+          >
+            Sair
+          </button>
+        </div>
+      )}
     </div>
   );
 }
