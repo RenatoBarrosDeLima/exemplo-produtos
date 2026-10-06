@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import type { User } from '../types/user';
 import { fetchUsers, deleteUser } from '../api/users';
+import { API_URL } from '../api/config';
 
 export function UserList() {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export function UserList() {
   useEffect(() => {
     fetchUsers()
       .then(setUsers)
-      .catch(() => setError('Backend não encontrado. Verifique se o servidor está rodando em localhost:3000'))
+      .catch(() => setError(`Backend não encontrado. Verifique se o servidor está rodando em ${API_URL}`))
       .finally(() => setLoading(false));
   }, []);
 

@@ -4,6 +4,7 @@ import type { Product, PageSection, SectionType } from '../types/product';
 import { SECTION_LABELS, createDefaultSection } from '../types/product';
 import { generatePageHtml } from '../utils/pageGenerator';
 import { fetchProduct, createProduct, updateProduct, uploadImage } from '../api/products';
+import { API_URL } from '../api/config';
 import { SectionEditor } from '../components/editor/SectionEditor';
 
 function slugify(str: string) {
@@ -320,7 +321,7 @@ export function ProductEditor() {
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e' }} />
             </div>
             <div style={{ flex: 1, background: '#334155', borderRadius: 5, padding: '3px 12px', fontSize: 11, color: '#94a3b8', textAlign: 'center' }}>
-              {`localhost:3000/products/slug/${product.slug || '...'}`}
+              {`${API_URL.replace(/^https?:\/\//, '')}/products/slug/${product.slug || '...'}`}
             </div>
           </div>
           <iframe ref={iframeRef} srcDoc={html} style={{ flex: 1, border: 'none' }} sandbox="allow-scripts allow-same-origin" title="Preview" />

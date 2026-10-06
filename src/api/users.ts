@@ -1,7 +1,6 @@
 import type { User } from '../types/user';
 import { authHeaders } from './auth';
-
-const API_URL = 'http://localhost:3000';
+import { API_URL } from './config';
 
 async function extractError(res: Response, fallback: string): Promise<string> {
   try {

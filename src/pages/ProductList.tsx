@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Product } from '../types/product';
 import { fetchProducts, deleteProduct } from '../api/products';
+import { API_URL } from '../api/config';
 import { SECTION_LABELS } from '../types/product';
 import type { SectionType } from '../types/product';
 import { useAuth } from '../context/AuthContext';
@@ -18,7 +19,7 @@ export function ProductList() {
   useEffect(() => {
     fetchProducts()
       .then(setProducts)
-      .catch(() => setError('Backend não encontrado. Verifique se o servidor está rodando em localhost:3000'))
+      .catch(() => setError(`Backend não encontrado. Verifique se o servidor está rodando em ${API_URL}`))
       .finally(() => setLoading(false));
   }, []);
 

@@ -1,7 +1,6 @@
 import type { Product } from '../types/product';
 import { authHeaders } from './auth';
-
-const API_URL = 'http://localhost:3000';
+import { API_URL } from './config';
 
 export async function fetchProducts(): Promise<Product[]> {
   const res = await fetch(`${API_URL}/products`);
